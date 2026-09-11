@@ -26,6 +26,23 @@ const SECTION_META = [
   { key: "complete",  name: "完整句子", emoji: "📜", needData: true }
 ];
 
+// 每环节默认出题量；年级可用 questionCounts 覆盖
+const DEFAULT_QUESTION_COUNTS = {
+  spelling: 8,
+  matching: 6,
+  fillblank: 6,
+  expression: 6,
+  complete: 5
+};
+
+// 按当前年级取该环节的出题量（不超过题库实际条数）
+function pickCount(sectionKey, available) {
+  const g = getActiveGrade();
+  const counts = (g && g.questionCounts) || DEFAULT_QUESTION_COUNTS;
+  const n = counts[sectionKey] || DEFAULT_QUESTION_COUNTS[sectionKey] || 5;
+  return Math.min(n, available);
+}
+
 // ========== 年级/教材注册表 ==========
 // 新增年级只需在这里加一项：levels 用词库，sections 保留该年级有题库的环节
 // 数组顺序 = 首页展示顺序，同时决定默认选中哪个年级
@@ -35,14 +52,20 @@ const GRADES = [
     label: "三年级上册",
     tag: "三年级",
     emoji: "🐣",
-    subtitle: "人教PEP版三年级上册单元词汇表",
+    subtitle: "人教PEP版三年级上册单元词汇与常用表达法",
     // LEVEL_DATA_G3 来自 data/grade3a.js（需在本文件之前引入）
     levels: (typeof LEVEL_DATA_G3 !== "undefined" && LEVEL_DATA_G3.length) ? LEVEL_DATA_G3 : [],
-    fillBlank: {},
-    expressionFill: {},
-    completeSentence: {},
-    // 三年级目前只有单词，句子类题库为空 → 只跑单词环节
-    sections: ["spelling", "matching"]
+    // 句子题库来自 data/grade3a_sentences.js
+    fillBlank: typeof FILL_BLANK_DATA_G3 !== "undefined" ? FILL_BLANK_DATA_G3 : {},
+    expressionFill: typeof EXPRESSION_FILL_DATA_G3 !== "undefined" ? EXPRESSION_FILL_DATA_G3 : {},
+    completeSentence: typeof COMPLETE_SENTENCE_DATA_G3 !== "undefined" ? COMPLETE_SENTENCE_DATA_G3 : {},
+    // 三年级刚入门，不跑「完整句子」（整句默写在第一学期偏难）；
+    // 题库 COMPLETE_SENTENCE_DATA_G3 仍然保留，想恢复只需把 "complete" 加回下面的 sections
+    sections: ["spelling", "matching", "fillblank", "expression"],
+    // 每环节题量减半：每关 21 题
+    questionCounts: { spelling: 6, matching: 5, fillblank: 5, expression: 5 },
+    // 大小写不扣分（如 miss / Miss、nice to meet you）
+    lenientCase: true
   },
   {
     id: "g6",
@@ -200,10 +223,25 @@ function getStarsFromScore(score, total) {
   return 0;
 }
 
+// 统一「智能引号 / 全角空格 / 多余空白」，避免手机键盘自动纠正导致误判
+function normalizeAnswer(str) {
+  return String(str == null ? "" : str)
+    .replace(/[\u2018\u2019\u02BC\uFF07]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// 当前年级是否「大小写不扣分」（三年级开启）
+function isLenientCase() {
+  const g = getActiveGrade();
+  return !!(g && g.lenientCase);
+}
+
 // 答案检查辅助：比较两个单词，返回详细结果
 function checkWord(playerAnswer, correctAnswer) {
-  const player = playerAnswer.trim();
-  const correct = correctAnswer.trim();
+  const player = normalizeAnswer(playerAnswer);
+  const correct = normalizeAnswer(correctAnswer);
   
   if (player === correct) {
     return { correct: true, hint: null };
@@ -211,6 +249,10 @@ function checkWord(playerAnswer, correctAnswer) {
   
   // 完全小写比较
   if (player.toLowerCase() === correct.toLowerCase()) {
+    // 三年级：只差大小写就算对
+    if (isLenientCase()) {
+      return { correct: true, hint: null };
+    }
     // 判断大小写问题
     if (correct[0] === correct[0].toUpperCase() && player[0] === player[0].toLowerCase()) {
       // 专有名词判断：常见首字母大写的词
@@ -260,8 +302,8 @@ function checkWord(playerAnswer, correctAnswer) {
 
 // 检查完整句子（含标点检查）
 function checkCompleteSentence(playerAnswer, correctAnswer) {
-  const player = playerAnswer.trim();
-  const correct = correctAnswer.trim();
+  const player = normalizeAnswer(playerAnswer);
+  const correct = normalizeAnswer(correctAnswer);
   
   if (player === correct) {
     return { correct: true, hint: null };
@@ -291,6 +333,14 @@ function checkCompleteSentence(playerAnswer, correctAnswer) {
   // 大小写整体比较
   const playerNoPunct = player.replace(/[.?!。！？]$/, "");
   const correctNoPunct = correct.replace(/[.?!。！？]$/, "");
+
+  // 三年级：单词拼写与顺序对上即可，大小写不扣分；句末「有没有标点」仍要一致
+  if (isLenientCase()) {
+    if (playerNoPunct.toLowerCase() === correctNoPunct.toLowerCase() &&
+        playerHasPunct === correctHasPunct) {
+      return { correct: true, hint: null };
+    }
+  }
   
   if (playerNoPunct.toLowerCase() === correctNoPunct.toLowerCase()) {
     if (!hint) {

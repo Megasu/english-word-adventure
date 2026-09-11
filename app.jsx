@@ -188,7 +188,7 @@ function SpellingPage({ level, onBack, onComplete }) {
   const resultsRef = useRef([]);
 
   useEffect(() => {
-    const selected = sampleArray(level.words, Math.min(8, level.words.length));
+    const selected = sampleArray(level.words, pickCount("spelling", level.words.length));
     setQuestions(selected);
     setCurrentIndex(0);
     setCorrectCount(0);
@@ -339,7 +339,7 @@ function MatchingPage({ level, onBack, onComplete }) {
   const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    const selected = sampleArray(level.words, Math.min(6, level.words.length));
+    const selected = sampleArray(level.words, pickCount("matching", level.words.length));
     setPairs(selected);
     setChineseList(shuffleArray(selected.map((w, i) => ({ ...w, originalIndex: i }))));
     setMatchedPairs([]);
@@ -924,7 +924,7 @@ function CompleteSentencePage({ level, onBack, onComplete }) {
 
   useEffect(() => {
     const allQuestions = getCompleteSentenceData()[level.id] || [];
-    const selected = sampleArray(allQuestions, Math.min(5, allQuestions.length));
+    const selected = sampleArray(allQuestions, pickCount("complete", allQuestions.length));
     setQuestions(selected);
     setCurrentIndex(0);
     setCorrectCount(0);
