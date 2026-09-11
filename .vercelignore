@@ -1,0 +1,9 @@
+.git/
+.agent/
+.spark/
+.workbuddy/
+.vercel/
+.env*
+.DS_Store
+node_modules/
+README.md
