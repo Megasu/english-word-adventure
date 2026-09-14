@@ -68,6 +68,32 @@ const GRADES = [
     lenientCase: true
   },
   {
+    id: "g4",
+    label: "四年级上册",
+    tag: "四年级",
+    emoji: "🐯",
+    subtitle: "人教PEP版四年级上册单元词汇与常用表达法",
+    levels: (typeof LEVEL_DATA_G4 !== "undefined" && LEVEL_DATA_G4.length) ? LEVEL_DATA_G4 : [],
+    fillBlank: typeof FILL_BLANK_DATA_G4 !== "undefined" ? FILL_BLANK_DATA_G4 : {},
+    expressionFill: typeof EXPRESSION_FILL_DATA_G4 !== "undefined" ? EXPRESSION_FILL_DATA_G4 : {},
+    completeSentence: typeof COMPLETE_SENTENCE_DATA_G4 !== "undefined" ? COMPLETE_SENTENCE_DATA_G4 : {},
+    sections: ["spelling", "matching", "fillblank", "expression", "complete"],
+    // 中年级：题量略减，每关 25 题
+    questionCounts: { spelling: 6, matching: 5, fillblank: 5, expression: 5, complete: 4 }
+  },
+  {
+    id: "g5",
+    label: "五年级上册",
+    tag: "五年级",
+    emoji: "🦅",
+    subtitle: "人教PEP版五年级上册单元词汇与常用表达法",
+    levels: (typeof LEVEL_DATA_G5 !== "undefined" && LEVEL_DATA_G5.length) ? LEVEL_DATA_G5 : [],
+    fillBlank: typeof FILL_BLANK_DATA_G5 !== "undefined" ? FILL_BLANK_DATA_G5 : {},
+    expressionFill: typeof EXPRESSION_FILL_DATA_G5 !== "undefined" ? EXPRESSION_FILL_DATA_G5 : {},
+    completeSentence: typeof COMPLETE_SENTENCE_DATA_G5 !== "undefined" ? COMPLETE_SENTENCE_DATA_G5 : {},
+    sections: ["spelling", "matching", "fillblank", "expression", "complete"]
+  },
+  {
     id: "g6",
     label: "六年级上册",
     tag: "六年级",
